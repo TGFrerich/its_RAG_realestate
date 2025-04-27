@@ -158,3 +158,8 @@ Thumbs.db
 
 # Vector DB storage
 vector_db/
+
+# Notes
+/notes
+TASK.md
+PLANNING.md
