@@ -8,3 +8,4 @@ ollama
 chromadb
 python-dotenv
 PyYAML
+pylance

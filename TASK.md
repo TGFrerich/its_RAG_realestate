@@ -35,18 +35,18 @@ This task list outlines the initial steps to build the local prototype. Tasks sh
 ## Phase 3: Retrieval Backend (Local)
 
 -   [ ] **Embeddings Setup (`rag_app/retrieval/retriever.py`):**
-    -   [ ] Create function `initialize_embedding_model(model_name: str)` using `HuggingFaceEmbeddings`.
+    -   [x] Create function `initialize_embedding_model(model_name: str)` using `HuggingFaceEmbeddings`.
 -   [ ] **Vector Store Setup (ChromaDB) (`rag_app/retrieval/retriever.py`):**
-    -   [ ] Create function `initialize_vector_store(embedding_function, persist_directory: str)` using `Chroma`. Configure for persistence.
-    -   [ ] Create function `add_documents_to_db(vector_store, docs: list[Document])`. Ensure source metadata (filename) is stored with chunks. Handle potential batching/updates.
-    -   [ ] Create function `delete_document_from_db(vector_store, filename: str)` using Chroma's metadata filtering capabilities.
+    -   [x] Create function `initialize_vector_store(embedding_function, persist_directory: str)` using `Chroma`. Configure for persistence.
+    -   [x] Create function `add_documents_to_db(vector_store, docs: list[Document])`. Ensure source metadata (filename) is stored with chunks. Handle potential batching/updates.
+    -   [x] Create function `delete_document_from_db(vector_store, filename: str)` using Chroma's metadata filtering capabilities.
 -   [ ] **Indexing Logic (`app.py`):**
-    -   [ ] Connect document upload: After saving a file, trigger `load_pdf_documents`, `chunk_documents`, and `add_documents_to_db`. Provide user feedback (spinner, success/error messages).
+    -   [x] Connect document upload: After saving a file, trigger `load_pdf_documents`, `chunk_documents`, and `add_documents_to_db`. Provide user feedback (spinner, success/error messages).
 -   [ ] **Deletion Logic (`app.py`):**
-    -   [ ] Implement document deletion UI (e.g., select box + button).
-    -   [ ] On deletion, trigger `delete_document_from_db` *before* deleting the file from disk.
+    -   [x] Implement document deletion UI (e.g., select box + button).
+    -   [x] On deletion, trigger `delete_document_from_db` *before* deleting the file from disk.
 -   [ ] **Retriever Setup (`rag_app/retrieval/retriever.py`):**
-    -   [ ] Create function `get_retriever(vector_store, search_type="similarity", k=4)` to get a retriever object from the vector store (e.g., `vector_store.as_retriever()`). Plan for `k` parameterization. (Hybrid search integration is a later task).
+    -   [x] Create function `get_retriever(vector_store, search_type="similarity", k=4)` to get a retriever object from the vector store (e.g., `vector_store.as_retriever()`). Plan for `k` parameterization. (Hybrid search integration is a later task).
 
 ## Phase 4: LLM Integration & Core RAG Pipeline
 

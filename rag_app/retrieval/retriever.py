@@ -186,5 +186,52 @@ def delete_document_from_db(vector_store: Chroma, filename: str) -> None:
         logger.error(f"Failed to delete document chunks for source '{filename}': {e}", exc_info=True)
         raise
 
+from langchain_core.vectorstores import VectorStoreRetriever
+
+DEFAULT_RETRIEVER_K = 4
+
+def get_retriever(vector_store: VectorStore, search_type: str = "similarity", k: Optional[int] = None) -> VectorStoreRetriever:
+    """
+    Creates and returns a retriever from the given vector store.
+
+    Args:
+        vector_store (VectorStore): The initialized vector store instance (e.g., Chroma).
+        search_type (str): The type of search to perform (e.g., "similarity", "mmr").
+                           Defaults to "similarity".
+        k (Optional[int]): The number of documents to retrieve. If None, uses the value
+                           from the RETRIEVER_K environment variable or falls back to
+                           DEFAULT_RETRIEVER_K.
+
+    Returns:
+        VectorStoreRetriever: A retriever instance configured for the vector store.
+
+    Raises:
+        ValueError: If the vector store is not provided.
+        Exception: For other potential errors during retriever creation.
+    """
+    if not vector_store:
+        raise ValueError("Vector store must be provided to create a retriever.")
+
+    if k is None:
+        try:
+            k = int(os.getenv("RETRIEVER_K", DEFAULT_RETRIEVER_K))
+        except ValueError:
+            logger.warning(f"Invalid RETRIEVER_K env var. Using default: {DEFAULT_RETRIEVER_K}")
+            k = DEFAULT_RETRIEVER_K
+        logger.info(f"Retriever 'k' not provided, using from env/default: {k}")
+
+    search_kwargs = {'k': k}
+    logger.info(f"Creating retriever with search_type='{search_type}' and k={k}")
+
+    try:
+        retriever = vector_store.as_retriever(
+            search_type=search_type,
+            search_kwargs=search_kwargs
+        )
+        logger.info("Retriever created successfully.")
+        return retriever
+    except Exception as e:
+        logger.error(f"Failed to create retriever: {e}", exc_info=True)
+        raise
 # --- Add retriever function below ---
 # --- Add other retrieval functions below (vector store, retriever) ---
