@@ -22,15 +22,15 @@ This task list outlines the initial steps to build the local prototype. Tasks sh
 ## Phase 2: Document Management & Processing
 
 -   [ ] **Document Upload & Storage (`app.py`, `rag_app/utils/helpers.py`):**
-    -   [ ] Implement file upload (`st.file_uploader`) in the sidebar.
-    -   [ ] Save uploaded PDF files to the `documents/` directory.
-    -   [ ] Implement function to list files in `documents/` directory (`list_uploaded_files`).
-    -   [ ] Display the list of uploaded files in the sidebar.
-    -   [ ] Implement file download (`st.download_button`) for listed files.
+    -   [x] Implement file upload (`st.file_uploader`) in the sidebar.
+    -   [x] Save uploaded PDF files to the `documents/` directory.
+    -   [x] Implement function to list files in `documents/` directory (`list_uploaded_files`).
+    -   [x] Display the list of uploaded files in the sidebar.
+    -   [x] Implement file download (`st.download_button`) for listed files.
 -   [ ] **Document Loading (`rag_app/doc_processing/loader.py`):**
-    -   [ ] Create function `load_pdf_documents(file_paths: list[Path]) -> list[Document]` using `PyPDFLoader`. Handle potential errors.
+    -   [x] Create function `load_pdf_documents(file_paths: list[Path]) -> list[Document]` using `PyPDFLoader`. Handle potential errors.
 -   [ ] **Document Chunking (`rag_app/doc_processing/chunker.py`):**
-    -   [ ] Create function `chunk_documents(docs: list[Document], chunk_size: int, chunk_overlap: int) -> list[Document]` using `RecursiveCharacterTextSplitter`.
+    -   [x] Create function `chunk_documents(docs: list[Document], chunk_size: int, chunk_overlap: int) -> list[Document]` using `RecursiveCharacterTextSplitter`.
 
 ## Phase 3: Retrieval Backend (Local)
 
