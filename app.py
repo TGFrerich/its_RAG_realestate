@@ -12,8 +12,11 @@ from rag_app.retrieval.retriever import (
     initialize_embedding_model,
     initialize_vector_store,
     add_documents_to_db,
-    delete_document_from_db # Import deletion function
+    delete_document_from_db,
+    get_retriever # Import retriever function
 )
+from rag_app.llm.generator import initialize_llm, rag_prompt # Import LLM init and prompt
+from rag_app.core.pipeline import generate_protocol # Import core pipeline function
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -205,9 +208,97 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.header("📋 Input Notes")
-    st.write("Enter meeting details and decision points here.")
-    # TODO: Add input form
+    st.write("Enter meeting details and decision points below.")
 
+    # Use a form to gather all inputs before processing
+    with st.form("protocol_input_form"):
+        st.subheader("Allgemeine Informationen")
+        topic = st.text_input("Thema des Gesprächs:", value=st.session_state.meeting_notes["general_info"].get("topic", ""))
+        date = st.text_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", ""))
+        attendees = st.text_input("Teilnehmer (kommagetrennt):", value=st.session_state.meeting_notes["general_info"].get("attendees", ""))
+
+        st.divider()
+        st.subheader("Besprochene Punkte & Entscheidungen")
+
+        # Display existing decision points
+        decision_points = st.session_state.meeting_notes["decision_points"]
+        for i, point_data in enumerate(decision_points):
+            st.markdown(f"**Punkt {i+1}**")
+            point = st.text_area(f"Beschreibung Punkt {i+1}", value=point_data.get("point", ""), key=f"point_{i}", height=100)
+            decision = st.text_area(f"Entscheidung/Ergebnis Punkt {i+1}", value=point_data.get("decision", ""), key=f"decision_{i}", height=100)
+            st.markdown("---") # Separator between points
+
+        # Buttons to add/remove points - placed inside the form
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            add_point = st.form_submit_button("➕ Weiteren Punkt hinzufügen")
+        with col_btn2:
+            remove_point = st.form_submit_button("➖ Letzten Punkt entfernen", disabled=not decision_points) # Disable if no points
+
+        st.divider()
+
+        # Main submit button for the form
+        submitted = st.form_submit_button("🚀 Generate Protocol Draft")
+
+        # --- Form Submission Logic ---
+        if submitted or add_point or remove_point:
+            # Always update general info from the form fields
+            st.session_state.meeting_notes["general_info"]["topic"] = topic
+            st.session_state.meeting_notes["general_info"]["date"] = date
+            st.session_state.meeting_notes["general_info"]["attendees"] = attendees
+
+            # Update existing decision points from form fields
+            # Need to access form elements by key - st.session_state holds widget values directly
+            updated_points = []
+            for i in range(len(decision_points)):
+                 updated_points.append({
+                     "point": st.session_state[f"point_{i}"],
+                     "decision": st.session_state[f"decision_{i}"]
+                 })
+            st.session_state.meeting_notes["decision_points"] = updated_points
+
+            # Handle Add/Remove Point Actions
+            if add_point:
+                st.session_state.meeting_notes["decision_points"].append({"point": "", "decision": ""})
+                # Rerun immediately to show the new empty fields within the form
+                st.rerun()
+            elif remove_point:
+                if st.session_state.meeting_notes["decision_points"]:
+                    st.session_state.meeting_notes["decision_points"].pop()
+                    # Rerun immediately to remove the last fields from the form
+                    st.rerun()
+            elif submitted:
+                # Ensure there are notes to process
+                if not st.session_state.meeting_notes["general_info"]["topic"] and not st.session_state.meeting_notes["decision_points"]:
+                    st.warning("Please enter some meeting notes before generating the protocol.")
+                else:
+                    # --- Trigger RAG Pipeline ---
+                    try:
+                        with st.spinner("🧠 Generating protocol draft... This may take a moment."):
+                            # 1. Initialize components (some cached)
+                            embedding_model = get_embedding_model()
+                            vector_store = get_vector_store(embedding_model)
+                            retriever = get_retriever(vector_store) # Create retriever
+                            llm = initialize_llm() # Initialize LLM
+
+                            # 2. Call the generation function
+                            generated_draft = generate_protocol(
+                                notes=st.session_state.meeting_notes,
+                                retriever=retriever,
+                                llm=llm,
+                                prompt_template=rag_prompt
+                            )
+
+                            # 3. Store result in session state
+                            st.session_state.protocol_draft = generated_draft
+                            st.success("Protocol draft generated successfully!")
+                            # No rerun needed here, output will display in col2 based on session state change
+
+                    except Exception as gen_e:
+                        st.error(f"An error occurred during protocol generation: {gen_e}")
+                        st.session_state.protocol_draft = "" # Clear any previous draft on error
+
+# --- Output Column ---
 with col2:
     st.header("📜 Protocol Draft")
     st.write("The generated protocol draft will appear here.")
