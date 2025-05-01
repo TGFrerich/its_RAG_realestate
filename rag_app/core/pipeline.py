@@ -112,6 +112,27 @@ def generate_protocol(notes: Dict[str, Any], retriever: VectorStoreRetriever, ll
         # Re-raise the exception to be handled by the caller (e.g., Streamlit app)
         raise
 
+import re
+
+def clean_citations(text: str) -> str:
+    """
+    Removes citation patterns like (Quelle: filename.pdf) from the text using regex.
+
+    Args:
+        text (str): The text containing citations.
+
+    Returns:
+        str: The text with citation patterns removed.
+    """
+    # Regex to find "(Quelle: ...)" patterns, accounting for potential variations
+    # It looks for "(Quelle:", followed by any characters non-greedily until the closing parenthesis ")"
+    # It also handles potential whitespace around the pattern.
+    citation_pattern = r'\s*\(Quelle:[^)]+\)\s*'
+    cleaned_text = re.sub(citation_pattern, ' ', text).strip() # Replace with space, then strip leading/trailing spaces
+    # Replace multiple spaces resulting from removal with a single space
+    cleaned_text = re.sub(r'\s{2,}', ' ', cleaned_text)
+    logger.info("Removed citation patterns from the generated text.")
+    return cleaned_text
 # Example Usage (for testing purposes, can be removed later)
 # if __name__ == '__main__':
 #     # This requires setting up dummy retriever, llm, prompt etc.

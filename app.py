@@ -16,7 +16,7 @@ from rag_app.retrieval.retriever import (
     get_retriever # Import retriever function
 )
 from rag_app.llm.generator import initialize_llm, rag_prompt # Import LLM init and prompt
-from rag_app.core.pipeline import generate_protocol # Import core pipeline function
+from rag_app.core.pipeline import generate_protocol, clean_citations # Import core pipeline function AND cleaning function
 
 # --- Page Configuration ---
 st.set_page_config(
@@ -50,6 +50,9 @@ if 'meeting_notes' not in st.session_state:
 # Initialize protocol draft if not already in state
 if 'protocol_draft' not in st.session_state:
     st.session_state.protocol_draft = ""
+# Initialize final protocol if not already in state
+if 'final_protocol' not in st.session_state:
+    st.session_state.final_protocol = ""
 
 # --- Caching Initialization Functions ---
 # Cache embedding model initialization
@@ -289,20 +292,49 @@ with col1:
                                 prompt_template=rag_prompt
                             )
 
-                            # 3. Store result in session state
+                            # 3. Store raw draft result in session state
                             st.session_state.protocol_draft = generated_draft
+
+                            # 4. Clean citations and store final protocol
+                            st.session_state.final_protocol = clean_citations(generated_draft)
+
                             st.success("Protocol draft generated successfully!")
                             # No rerun needed here, output will display in col2 based on session state change
 
                     except Exception as gen_e:
                         st.error(f"An error occurred during protocol generation: {gen_e}")
                         st.session_state.protocol_draft = "" # Clear any previous draft on error
+                        st.session_state.final_protocol = "" # Also clear final protocol on error
 
 # --- Output Column ---
 with col2:
     st.header("📜 Protocol Draft")
-    st.write("The generated protocol draft will appear here.")
-    # TODO: Add output display area
+    # Display the generated draft if available in session state
+    if st.session_state.protocol_draft:
+        st.markdown("---") # Add a separator
+        st.subheader("Generated Draft (with Citations):")
+        # Use markdown to allow for potential formatting from the LLM
+        # Use a text area for better scrollability and copy-paste
+        st.text_area("Draft Output", value=st.session_state.protocol_draft, height=400, disabled=True)
+
+        # Add download button for the final, cleaned protocol
+        if st.session_state.final_protocol:
+            st.download_button(
+                label="⬇️ Download Final Protocol (Cleaned)",
+                data=st.session_state.final_protocol.encode('utf-8'), # Encode to bytes
+                file_name="final_protocol.txt", # Suggest a filename
+                mime="text/plain",
+                key="download_final"
+            )
+        st.divider()
+        st.subheader("Feedback (Optional)")
+        feedback_text = st.text_area("Provide feedback on the generated draft:", key="feedback_text")
+        if st.button("Submit Feedback", key="submit_feedback", disabled=not feedback_text):
+            # TODO: Implement feedback logging/storage logic here in the future
+            st.toast("Feedback submitted (Placeholder - not saved yet).")
+
+    else:
+        st.info("The generated protocol draft will appear here once you submit the notes.")
 
 # --- Placeholder for future logic ---
 # st.write("App structure initialized. More features coming soon!") # Removed placeholder
