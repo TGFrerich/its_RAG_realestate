@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from typing import List
-from langchain_community.document_loaders import PyPDFLoader
+from langchain_community.document_loaders.pdf import PDFPlumberLoader
 from langchain_core.documents import Document
 
 # Configure logging
@@ -31,7 +31,7 @@ def load_pdf_documents(file_paths: List[Path]) -> List[Document]:
             continue
 
         try:
-            loader = PyPDFLoader(str(file_path), extract_images=False) # extract_images=False for efficiency
+            loader = PDFPlumberLoader(str(file_path), extract_images=False) # extract_images=False for efficiency
             docs = loader.load() # load() returns a list of Documents (often one per page)
             logger.info(f"Loaded {len(docs)} pages/documents from {file_path.name}")
             # Add source metadata to each document/page

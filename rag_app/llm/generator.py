@@ -2,7 +2,7 @@ import logging
 import os
 from typing import Optional
 
-from langchain_community.llms import Ollama
+from langchain_ollama.llms import OllamaLLM
 from langchain_core.language_models.llms import LLM
 
 # Configure logging
@@ -47,7 +47,7 @@ def initialize_llm(model_name: Optional[str] = None, base_url: Optional[str] = N
 
     try:
         logger.info(f"Initializing Ollama LLM with model='{model_name}' and base_url='{base_url or 'default'}'.")
-        llm = Ollama(
+        llm = OllamaLLM(
             model=model_name,
             base_url=base_url # Pass None if not specified, Ollama handles default
             # Other parameters like temperature, top_k, etc., can be added here if needed
