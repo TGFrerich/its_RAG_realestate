@@ -71,70 +71,73 @@ def get_vector_store(_embedding_model): # Pass model to ensure dependency
     st.write("Vector store initialized.") # Debug message
     return vector_store
 
-# --- Sidebar ---
 with st.sidebar:
     st.header("📄 Document Management")
     st.write("Upload PDF documents to build the knowledge base.")
 
+    # Track processed files in session state
+    if "processed_files" not in st.session_state:
+        st.session_state.processed_files = []
+
     # Get documents directory from environment variables
     documents_dir_str = os.getenv("DOCUMENTS_DIR", "documents/")
     documents_dir = Path(documents_dir_str)
-    documents_dir.mkdir(parents=True, exist_ok=True) # Ensure directory exists
+    documents_dir.mkdir(parents=True, exist_ok=True)
 
     uploaded_file = st.file_uploader(
         "Upload a PDF document", type="pdf", accept_multiple_files=False
     )
 
     if uploaded_file is not None:
-        # Construct the full path to save the file
-        file_path = documents_dir / uploaded_file.name
-        try:
-            # Write the uploaded file's content to the target file path
-            with open(file_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
-            st.success(f"Successfully saved '{uploaded_file.name}' to {documents_dir_str}")
-
-            # --- Indexing Logic ---
+        filename = uploaded_file.name
+        # Only process new files
+        if filename not in st.session_state.processed_files:
+            file_path = documents_dir / filename
             try:
-                with st.spinner(f"Processing and indexing '{uploaded_file.name}'..."):
-                    # 1. Initialize models and vector store (cached)
-                    embedding_model = get_embedding_model()
-                    vector_store = get_vector_store(embedding_model) # Pass model
+                # Save upload to disk
+                with open(file_path, "wb") as f:
+                    f.write(uploaded_file.getbuffer())
+                st.success(f"Successfully saved '{filename}' to {documents_dir_str}")
 
-                    # 2. Load the newly uploaded document
-                    loaded_docs = load_pdf_documents([file_path])
-                    if not loaded_docs:
-                        st.error(f"Could not load document content from {uploaded_file.name}.")
-                        # Skip further processing for this file
-                        raise Exception("Document loading failed.") # Raise to exit try block cleanly
+                # --- Indexing Logic ---
+                try:
+                    with st.spinner(f"Processing and indexing '{filename}'..."):
+                        # 1. Initialize models and vector store (cached)
+                        embedding_model = get_embedding_model()
+                        vector_store = get_vector_store(embedding_model)
 
-                    # 3. Chunk the document
-                    chunk_size = int(os.getenv("CHUNK_SIZE", 1000))
-                    chunk_overlap = int(os.getenv("CHUNK_OVERLAP", 200))
-                    chunked_docs = chunk_documents(loaded_docs, chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-                    if not chunked_docs:
-                        st.error(f"Could not chunk document {uploaded_file.name}.")
-                        raise Exception("Document chunking failed.")
+                        # 2. Load the newly uploaded document
+                        loaded_docs = load_pdf_documents([file_path])
+                        if not loaded_docs:
+                            st.error(f"Could not load document content from {filename}.")
+                            raise Exception("Document loading failed.")
 
-                    # 4. Add chunks to the vector store
-                    add_documents_to_db(vector_store, chunked_docs)
+                        # 3. Chunk the document
+                        chunk_size = int(os.getenv("CHUNK_SIZE", 1000))
+                        chunk_overlap = int(os.getenv("CHUNK_OVERLAP", 200))
+                        chunked_docs = chunk_documents(
+                            loaded_docs,
+                            chunk_size=chunk_size,
+                            chunk_overlap=chunk_overlap,
+                        )
+                        if not chunked_docs:
+                            st.error(f"Could not chunk document {filename}.")
+                            raise Exception("Document chunking failed.")
 
-                st.success(f"Successfully indexed '{uploaded_file.name}'!")
+                        # 4. Add chunks to the vector store
+                        add_documents_to_db(vector_store, chunked_docs)
 
-                # Clear the uploader state by rerunning - simplest approach for now
-                # More robust state management might be needed if uploads trigger complex workflows
-                st.rerun()
+                    st.success(f"Successfully indexed '{filename}'!")
+                    # Mark this file as processed
+                    st.session_state.processed_files.append(filename)
 
-            except Exception as index_e:
-                 st.error(f"Failed to process or index '{uploaded_file.name}': {index_e}")
-                 # Optionally remove the saved file if indexing fails?
-                 # try:
-                 #     file_path.unlink()
-                 #     st.info(f"Removed '{uploaded_file.name}' due to indexing failure.")
-                 # except OSError as unlink_e:
-                 #     st.error(f"Could not remove file after indexing error: {unlink_e}")
-        except Exception as e:
-            st.error(f"Error saving file: {e}")
+                except Exception as index_e:
+                    st.error(f"Failed to process or index '{filename}': {index_e}")
+
+            except Exception as e:
+                st.error(f"Error saving file: {e}")
+        else:
+            st.info(f"'{filename}' has already been processed this session.")
 
     st.divider()
     st.header("📚 Knowledge Base")
@@ -147,7 +150,7 @@ with st.sidebar:
     else:
         st.write(f"Found {len(pdf_files)} document(s):")
         for pdf_file in pdf_files:
-            col1, col2 = st.columns([0.7, 0.3]) # Adjust column ratio as needed
+            col1, col2 = st.columns([0.7, 0.3])
             with col1:
                 st.write(f"📄 {pdf_file.name}")
             with col2:
@@ -158,18 +161,17 @@ with st.sidebar:
                             data=fp,
                             file_name=pdf_file.name,
                             mime="application/pdf",
-                            key=f"download_{pdf_file.name}" # Unique key per button
+                            key=f"download_{pdf_file.name}"
                         )
                 except Exception as e:
                     st.error(f"Error reading {pdf_file.name} for download: {e}")
 
         st.divider()
         st.subheader("🗑️ Delete Document")
-        if pdf_files: # Only show delete options if there are files
+        if pdf_files:
             file_to_delete = st.selectbox(
                 "Select document to delete:",
                 options=[f.name for f in pdf_files],
-                index=None, # Default to no selection
                 placeholder="Choose a file..."
             )
 
@@ -186,24 +188,21 @@ with st.sidebar:
                             delete_document_from_db(vector_store, file_to_delete)
 
                             # 3. Delete the file from disk
-                            file_path_to_delete.unlink() # Remove the actual file
+                            file_path_to_delete.unlink()
 
                         st.success(f"Successfully deleted '{file_to_delete}' and its index.")
-                        st.rerun() # Refresh the UI
+                        st.rerun()
 
                     except FileNotFoundError:
-                        st.error(f"Error: File '{file_to_delete}' not found on disk. It might have been already deleted.")
-                        # Attempt to delete from vector store anyway, in case index still exists
+                        st.error(f"Error: File '{file_to_delete}' not found on disk.")
                         try:
                             delete_document_from_db(vector_store, file_to_delete)
-                            st.info(f"Removed index entries for '{file_to_delete}' (file was already missing).")
+                            st.info(f"Removed index entries for '{file_to_delete}'.")
                         except Exception as db_del_e:
                             st.error(f"Also failed to remove index entries: {db_del_e}")
                         st.rerun()
                     except Exception as del_e:
                         st.error(f"Failed to delete '{file_to_delete}': {del_e}")
-        else:
-            st.info("No documents to delete.")
 
 
 # --- Main Area ---
