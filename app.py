@@ -20,13 +20,13 @@ from rag_app.core.pipeline import generate_protocol, clean_citations # Import co
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="its_RAG_realestate - Protocol Assistant",
+    page_title="Protocol Assistant",
     page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
-st.title("📝 its_RAG_realestate - Protocol Assistant")
+st.title("📝 Protocol Assistant")
 st.caption("Generate real estate meeting protocols using RAG.")
 
 # --- Load Environment Variables ---
@@ -284,6 +284,9 @@ with col1:
                             llm = initialize_llm() # Initialize LLM
 
                             # 2. Call the generation function
+                            print(f"--- Debug: Parsed Meeting Notes (from app.py, type: {type(st.session_state.meeting_notes)}) ---")
+                            print(st.session_state.meeting_notes)
+                            print("--- End Debug: Parsed Meeting Notes ---")
                             generated_draft = generate_protocol(
                                 notes=st.session_state.meeting_notes,
                                 retriever=retriever,

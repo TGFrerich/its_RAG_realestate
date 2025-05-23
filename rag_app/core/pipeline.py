@@ -82,6 +82,10 @@ def generate_protocol(notes: Dict[str, Any], retriever: VectorStoreRetriever, ll
     """
     logger.info("Starting protocol generation process...")
 
+    print(f"--- Debug: Meeting Notes (received by generate_protocol, type: {type(notes)}) ---")
+    print(notes)
+    print("--- End Debug: Meeting Notes (received by generate_protocol) ---")
+
     try:
         # Format the notes into a single query string for retrieval
         # We retrieve based on the combined notes information.
@@ -91,7 +95,18 @@ def generate_protocol(notes: Dict[str, Any], retriever: VectorStoreRetriever, ll
         # Define the RAG chain using LCEL
         rag_chain = (
             # Pass the formatted notes through for the prompt, and use it for retrieval
-            {"context": itemgetter("notes_query") | retriever | format_docs, "notes": itemgetter("notes_formatted")}
+            {"context": itemgetter("notes_query")
+                        | retriever
+                        | RunnableLambda(
+                            lambda docs: (
+                                print(f"--- Debug: Retrieved Context (type: {type(docs)}) ---"),
+                                print(docs),
+                                print("--- End Debug: Retrieved Context ---"),
+                                docs
+                            )[-1]  # Pass docs through after printing
+                          )
+                        | format_docs,
+             "notes": itemgetter("notes_formatted")}
             | prompt_template
             | llm
             | StrOutputParser()
