@@ -41,11 +41,11 @@ if 'meeting_notes' not in st.session_state:
     st.session_state.meeting_notes = {
         "general_info": {
             "title": "",
-            "date": "",
+            "date": None,
             "property_address": "",
             "meeting_place": "",
-            "start_time": "",
-            "end_time": "",
+            "start_time": None,  # Use None for time inputs
+            "end_time": None,    # Use None for time inputs
             "chairperson": "",
             "secretary": "",
         },
@@ -222,10 +222,10 @@ with col1:
         st.subheader("Allgemeine Informationen")
         title = st.text_input("Titel:", value=st.session_state.meeting_notes["general_info"].get("title", ""))
         property_address = st.text_input("Objektadresse:", value=st.session_state.meeting_notes["general_info"].get("property_address", ""))
-        date = st.text_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", ""))
+        date = st.date_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", ""))
         meeting_place = st.text_input("Besprechungsort:", value=st.session_state.meeting_notes["general_info"].get("meeting_place", ""))
-        start_time = st.text_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", ""))
-        end_time = st.text_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", ""))
+        start_time = st.time_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", ""))
+        end_time = st.time_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", ""))
         chairperson = st.text_input("Versammlungsleiter:", value=st.session_state.meeting_notes["general_info"].get("chairperson", ""))
         secretary = st.text_input("Protokollführer:", value=st.session_state.meeting_notes["general_info"].get("secretary", ""))
     
