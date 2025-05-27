@@ -40,9 +40,14 @@ load_dotenv()
 if 'meeting_notes' not in st.session_state:
     st.session_state.meeting_notes = {
         "general_info": {
-            "topic": "",
+            "title": "",
             "date": "",
-            "attendees": ""
+            "property_address": "",
+            "meeting_place": "",
+            "start_time": "",
+            "end_time": "",
+            "chairperson": "",
+            "secretary": "",
         },
         "decision_points": [] # List of dicts, e.g., {"point": "", "decision": ""}
     }
@@ -209,15 +214,21 @@ with st.sidebar:
 col1, col2 = st.columns(2)
 
 with col1:
-    st.header("📋 Input Notes")
-    st.write("Enter meeting details and decision points below.")
+    st.header("📋 Eingabe Notizen")
+    st.write("Angaben zur Versammlung und den besprochenen Punkten.")
 
     # Use a form to gather all inputs before processing
-    with st.form("protocol_input_form"):
+    with st.form("protocol_input_form",enter_to_submit=False):
         st.subheader("Allgemeine Informationen")
-        topic = st.text_input("Thema des Gesprächs:", value=st.session_state.meeting_notes["general_info"].get("topic", ""))
+        title = st.text_input("Titel:", value=st.session_state.meeting_notes["general_info"].get("title", ""))
+        property_address = st.text_input("Objektadresse:", value=st.session_state.meeting_notes["general_info"].get("property_address", ""))
         date = st.text_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", ""))
-        attendees = st.text_input("Teilnehmer (kommagetrennt):", value=st.session_state.meeting_notes["general_info"].get("attendees", ""))
+        meeting_place = st.text_input("Besprechungsort:", value=st.session_state.meeting_notes["general_info"].get("meeting_place", ""))
+        start_time = st.text_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", ""))
+        end_time = st.text_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", ""))
+        chairperson = st.text_input("Versammlungsleiter:", value=st.session_state.meeting_notes["general_info"].get("chairperson", ""))
+        secretary = st.text_input("Protokollführer:", value=st.session_state.meeting_notes["general_info"].get("secretary", ""))
+    
 
         st.divider()
         st.subheader("Besprochene Punkte & Entscheidungen")
@@ -240,14 +251,21 @@ with col1:
         st.divider()
 
         # Main submit button for the form
-        submitted = st.form_submit_button("🚀 Generate Protocol Draft")
+        submitted = st.form_submit_button("🚀 Protokoll generieren")
 
         # --- Form Submission Logic ---
         if submitted or add_point or remove_point:
             # Always update general info from the form fields
-            st.session_state.meeting_notes["general_info"]["topic"] = topic
+            st.session_state.meeting_notes["general_info"]["topic"] = title
             st.session_state.meeting_notes["general_info"]["date"] = date
-            st.session_state.meeting_notes["general_info"]["attendees"] = attendees
+            st.session_state.meeting_notes["general_info"]["property_address"] = property_address
+            st.session_state.meeting_notes["general_info"]["meeting_place"] = meeting_place
+            st.session_state.meeting_notes["general_info"]["start_time"] = start_time
+            st.session_state.meeting_notes["general_info"]["end_time"] = end_time
+            st.session_state.meeting_notes["general_info"]["chairperson"] = chairperson
+            st.session_state.meeting_notes["general_info"]["secretary"] = secretary
+
+            
 
             # Update existing decision points from form fields
             # Need to access form elements by key - st.session_state holds widget values directly
