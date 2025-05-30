@@ -43,7 +43,7 @@ if 'meeting_notes' not in st.session_state:
             "title": "",
             "date": None,
             "property_address": "",
-            "meeting_place": "",
+            "location": "",
             "start_time": None,  # Use None for time inputs
             "end_time": None,    # Use None for time inputs
             "chairperson": "",
@@ -222,10 +222,10 @@ with col1:
         st.subheader("Allgemeine Informationen")
         title = st.text_input("Titel:", value=st.session_state.meeting_notes["general_info"].get("title", ""))
         property_address = st.text_input("Objektadresse:", value=st.session_state.meeting_notes["general_info"].get("property_address", ""))
-        date = st.date_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", ""))
-        meeting_place = st.text_input("Besprechungsort:", value=st.session_state.meeting_notes["general_info"].get("meeting_place", ""))
-        start_time = st.time_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", ""))
-        end_time = st.time_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", ""))
+        date = str(st.date_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", "")))
+        location = st.text_input("Besprechungsort:", value=st.session_state.meeting_notes["general_info"].get("location", ""))
+        start_time = str(st.time_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", "")))
+        end_time = str(st.time_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", "")))
         chairperson = st.text_input("Versammlungsleiter:", value=st.session_state.meeting_notes["general_info"].get("chairperson", ""))
         secretary = st.text_input("Protokollführer:", value=st.session_state.meeting_notes["general_info"].get("secretary", ""))
     
@@ -259,7 +259,7 @@ with col1:
             st.session_state.meeting_notes["general_info"]["topic"] = title
             st.session_state.meeting_notes["general_info"]["date"] = date
             st.session_state.meeting_notes["general_info"]["property_address"] = property_address
-            st.session_state.meeting_notes["general_info"]["meeting_place"] = meeting_place
+            st.session_state.meeting_notes["general_info"]["location"] = location
             st.session_state.meeting_notes["general_info"]["start_time"] = start_time
             st.session_state.meeting_notes["general_info"]["end_time"] = end_time
             st.session_state.meeting_notes["general_info"]["chairperson"] = chairperson
