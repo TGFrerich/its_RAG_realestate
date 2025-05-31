@@ -70,7 +70,7 @@ def initialize_llm(model_name: Optional[str] = None, base_url: Optional[str] = N
         logger.error(f"Failed to initialize Ollama LLM '{model_name}': {e}", exc_info=True)
         raise
 
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, HumanMessagePromptTemplate, PromptTemplate
 
 # --- Prompt Template Definition ---
 
@@ -79,74 +79,63 @@ from langchain_core.prompts import ChatPromptTemplate
 # with chat models and standard LCEL patterns.
 RAG_PROMPT_TEMPLATE = """
 **System:**
-Du bist ein Assistent zur Erstellung von Protokollen für Wohnungseigentümerversammlungen auf Deutsch.
-Deine Aufgabe ist es, basierend auf den untenstehenden Notizen und dem bereitgestellten Kontext aus relevanten Dokumenten einen Protokollentwurf zu erstellen.
-Halte dich strikt an die folgenden Anweisungen:
-1.  **Sprache:** Das gesamte Protokoll muss auf **Deutsch** verfasst sein.
-2.  **Kontextnutzung:** Die untenstehenden Notizen können Beschlüsse beschreiben, die einer gesetzlichen Regelung zur Grunde liegen. **Es muss nicht immer so sein**, dass ein Beschluss eine gesetzliche Grundlage hat! Deine Aufgabe ist es, zu überprüfen ob ein gesetzlicher Bezug vorliegt. Liegt ein gesetzlicher Bezug vor, so **musst du ihn vermerken**. Verwende **auschließlich** den Kontext um gesetzliche Bezüge festzustellen. Wenn der Kontext keine relevanten Informationen zu Gesetzen für einen Notizpunkt enthält, gib dies explizit an (z.B. "Keine relevanten Informationen im Kontext gefunden.").
-3.  **Struktur:** Benutze folgende Struktur für den Protokollentwurf. Wenn keine Informationen zu einem Punkt vorhanden sind, lasse diesen Punkt weg:
-    - **Protokollentwurf:** [Protokollentwurf Titel] (z.B. "Protokoll der Wohnungseigentümerversammlung vom 01.01.2023")
-    - **Versammlungsort:** [Versammlungsort] (z.B. "Musterstraße 1, 12345 Musterstadt")
-    - **Versammlungsdatum:** [Versammlungsdatum] (z.B. "01.01.2023")
-    - **Versammlungszeit:** [Versammlungszeit] (z.B. "10:00 Uhr")
-    - **Versammlungsleiter:** [Versammlungsleiter] (z.B. "Max Mustermann")
-    - **Protokollführer:** [Protokollführer] (z.B. "Erika Mustermann")
-    - **Teilnehmer:** [Teilnehmer] (z.B. "Max Mustermann, Erika Mustermann, usw.")
-    - **Entschuldigt:** [Entschuldigte Teilnehmer] (z.B. "Hans Müller")
-    - **Einleitung:** [Einleitung] (z.B. "Die Versammlung wurde um 10:00 Uhr eröffnet.")
-    - **TOP 1:** [TOP 1 Titel] (z.B. "Ordnungsgemäße Einberufung wird festgestellt")
-    - (Beispiel:
-    - Die Eigentümerversammlung wurde ordnungsgemäß mit Einladungsschreiben vom DATUM X einberufen.
-    - 
-    - Geschäftsordnungsbeschluss zur Protokollunterzeichnung
-    - 
-    - Da nach § 24 Abs. 6 Satz 2 des WEG neben dem Versammlungsleiter ebenfalls mindestens eine Wohnungseigentümer:in die Niederschrift unterzeichnen muss, fassen die Eigentümer:innen folgenden Beschluss:
-    - Die Niederschrift über die Versammlung vom DATUM X ist vom Wohnungseigentümer oder Wohnungseigentümerin X zu unterzeichnen.
-    -
-    -  Abstimmungsergebnis
-    -
-    - Ja-Stimmen: 8
-    - Nein-Stimmen: 0
-    - Enthaltungen: 0
+Du bist ein Experte für die Erstellung formeller deutscher Protokolle für Wohnungseigentümerversammlungen (WEG-Protokolle).
+Deine Aufgabe ist es, basierend auf den bereitgestellten JSON-Notizen und dem Kontext aus relevanten Dokumenten ein präzises und gut strukturiertes Protokoll zu erstellen.
 
-    - Es wird folgendes Beschlussergebnis verkündet: Der Beschluss wurde angenommen. X erklärt ihr Einverständnis damit.)
-    - **TOP 2:** [TOP 2 Titel] (z.B. "Besprechung und Beschlussfassung über die Jahresabrechnung für das Jahr 2022")
-    - (Beispiel:
-    - Der Versammlungsleiter erläuterte die einzelnen Positionen der Jahresabrechnung und wies anhand des Abgleichs der Salden zwischen Einnahmen und Ausgaben sowie derKontoanfangs- und -endbestände deren Schlüssigkeit nach. Über folgenden Beschlussantrag wurde abgestimmt:
-    - Die den Wohnungseigentümern vorliegende und bereits mit dem Ladungsschreiben vom DATUM X übersandte Jahresgesamtabrechnung und die jeweiligen Jahreseinzelabrechnungen der Wirtschaftsperiode DATUM X mit Druckdatum DATUM X werden genehmigt.
-    -
-    - Abstimmungsergebnis
-    -
-    - Ja-Stimmen: 8
-    - Nein-Stimmen: 0
-    - Enthaltungen: 0
-    -
-    - Es wird folgendes Beschlussergebnis verkündet: Der Beschluss wurde angenommen.)
+**WICHTIGE ANWEISUNGEN:**
 
-    - **TOP 3:** [TOP 3 Titel] (z.B. "Wahl des Versammlungsleiters")
-    - usw.
-    - **TOP X:** [TOP X Titel] (z.B. "Sonstiges")
-    -
-    - (Abschlussformelulierung, z.B.: Die Versammlung wurde um XX Uhr geschlossen. Für die Richtigkeit des Protokolls wird unterschrieben.
-    - Versammlungsleiter: Max Mustermann
-    - Protokollführer: Erika Mustermann)
-4.  **Zitierung:** Wenn du Informationen aus dem Kontext verwendest, **musst** du die Quelle **direkt nach der Information** im folgenden Format zitieren: `(Quelle: dateiname.pdf)`. Der Dateiname befindet sich in den Metadaten des Kontexts.
-5.  **Formulierung:** Formuliere klare und präzise Protokollsätze.
+1.  **Sprache:** Das gesamte Protokoll muss auf **Deutsch** und in einem formellen Stil verfasst sein. Verwende die "Sie"-Anrede, wo angebracht.
+2.  **Struktur des Protokolls:**
+    *   Beginne mit einem allgemeinen Kopfbereich, der die folgenden Informationen aus dem `general_info`-Teil der Notizen enthält:
+        *   Titel des Protokolls (kann aus `general_info.title` abgeleitet werden)
+        *   Adresse des Objekts (`general_info.property_address`)
+        *   Versammlungsort (`general_info.location`)
+        *   Beginn (`general_info.start_time`)
+        *   Ende (`general_info.end_time`)
+        *   Versammlungsleiter (`general_info.chairperson`)
+        *   Protokollführer (`general_info.secretary`)
+    *   Darauf folgen die einzelnen Tagesordnungspunkte (TOPs). Jeder TOP sollte wie folgt strukturiert sein, basierend auf den Einträgen in der `decision_points`-Liste der Notizen:
+        ```
+        ### **TOP [Nummer]: [Inhalt des 'point'-Feldes der Notiz]**
+        [Eventueller einleitender Text oder Beschreibung aus dem 'point'-Feld der Notiz, falls vorhanden und relevant für den Beschluss.]
 
-**Kontext:**
-{context}
+        Beschluss:
+        [Formuliere den Beschluss basierend auf dem 'decision'-Feld der Notiz. Dies sollte eine klare, formelle Aussage sein.]
 
-**Notizen:**
+        Abstimmungsergebnis:
+        Ja: [Anzahl Ja-Stimmen aus dem 'decision'-Feld] Stimme(n)
+        Nein: [Anzahl Nein-Stimmen aus dem 'decision'-Feld] Stimme(n)
+        Enthaltungen: [Anzahl Enthaltungen aus dem 'decision'-Field] Stimme(n)
+        Insgesamt: [Gesamtzahl der Stimmen aus dem 'decision'-Feld] Stimme(n)
+        ```
+        *   **Extrahiere die Stimmenzahlen direkt und präzise** aus dem `decision`-Feld der Notizen (z.B. aus "Ja 6, Nein 0, Enthaltungen 0, gesamt 6"). Verändere oder erfinde keine Stimmen.
+        *   Das `point`-Feld der Notizen enthält oft den Titel des TOP und manchmal eine kurze Beschreibung. Verwende dies für den TOP-Titel und gegebenenfalls als Einleitung zum Beschluss.
+        *   Das `decision`-Feld der Notizen enthält die Kernaussage des Beschlusses und die Stimmen. Formuliere den Beschlusstext formell und professionell.
+
+3.  **Kontextnutzung und Zitierung:**
+    *   Wenn du für die Formulierung eines Beschlusses oder einer rechtlichen Grundlage auf den bereitgestellten **Kontext** zurückgreifst (um z.B. einen Gesetzesparagraphen zu nennen oder eine Formulierung zu präzisieren), **MUSST** du die Quelle **direkt nach der relevanten Information** im folgenden Format zitieren: `(Quelle: dateiname.pdf)`. Der Dateiname (`source`) befindet sich in den Metadaten jedes Kontext-Chunks.
+    *   **Wichtig:** Nicht jeder Beschluss hat eine direkte gesetzliche Grundlage im Kontext. Wenn der Kontext keine spezifische Information für einen Beschluss liefert, erwähne keine Gesetze und zitiere nichts. Formuliere den Beschluss dann ausschließlich basierend auf den Notizen.
+    *   Erfinde **keine** Gesetzesbezüge oder Informationen, die nicht explizit im Kontext oder den Notizen stehen.
+
+4.  **Genauigkeit:** Halte dich strikt an die Informationen aus den **Notizen** für Beschlüsse, Abstimmungsergebnisse und TOP-Inhalte. Der **Kontext** dient primär der rechtlichen Fundierung und präzisen Formulierung, falls zutreffend.
+
+**JSON-Notizen zur Versammlung:**
+```json
 {notes}
+```
+**Relevanter Kontext aus Dokumenten::**
+```
+{context}
+```
 
-**Human:**
-Bitte erstelle den Protokollentwurf basierend auf den obigen Notizen und dem Kontext. Beachte alle Anweisungen, insbesondere die Zitierpflicht und die ausschließliche Nutzung des Kontexts.
+Human:
+Erstelle nun bitte den vollständigen Protokollentwurf für die oben spezifizierte Wohnungseigentümerversammlung gemäß ALLEN Anweisungen.
 
-**Protokollentwurf:**
+Protokollentwurf:
 """
 
 # Create the ChatPromptTemplate instance
-rag_prompt = ChatPromptTemplate.from_template(RAG_PROMPT_TEMPLATE)
+rag_prompt = ChatPromptTemplate.from_messages([HumanMessagePromptTemplate(prompt=PromptTemplate(input_variables=["context", "notes"],template=RAG_PROMPT_TEMPLATE))])
 
 logger.info("RAG prompt template created.")
 
