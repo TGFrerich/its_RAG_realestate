@@ -256,7 +256,7 @@ with col1:
         # --- Form Submission Logic ---
         if submitted or add_point or remove_point:
             # Always update general info from the form fields
-            st.session_state.meeting_notes["general_info"]["topic"] = title
+            st.session_state.meeting_notes["general_info"]["title"] = title
             st.session_state.meeting_notes["general_info"]["date"] = date
             st.session_state.meeting_notes["general_info"]["property_address"] = property_address
             st.session_state.meeting_notes["general_info"]["location"] = location
@@ -289,7 +289,7 @@ with col1:
                     st.rerun()
             elif submitted:
                 # Ensure there are notes to process
-                if not st.session_state.meeting_notes["general_info"]["topic"] and not st.session_state.meeting_notes["decision_points"]:
+                if not st.session_state.meeting_notes["general_info"]["title"] and not st.session_state.meeting_notes["decision_points"]:
                     st.warning("Please enter some meeting notes before generating the protocol.")
                 else:
                     # --- Trigger RAG Pipeline ---
