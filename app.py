@@ -15,7 +15,7 @@ from rag_app.retrieval.retriever import (
     delete_document_from_db,
     get_retriever # Import retriever function
 )
-from rag_app.llm.generator import initialize_llm, rag_prompt # Import LLM init and prompt
+from rag_app.llm.generator import initialize_mistral_llm, rag_prompt # Import MISTRAL LLM init and prompt
 from rag_app.core.pipeline import generate_protocol, clean_citations # Import core pipeline function AND cleaning function
 
 # --- Page Configuration ---
@@ -299,7 +299,8 @@ with col1:
                             embedding_model = get_embedding_model()
                             vector_store = get_vector_store(embedding_model)
                             retriever = get_retriever(vector_store) # Create retriever
-                            llm = initialize_llm() # Initialize LLM
+                            # Initialize Mistral LLM (ensure MISTRAL_API_KEY is in .env)
+                            llm = initialize_mistral_llm()
 
                             # 2. Call the generation function
                             generated_draft = generate_protocol(
