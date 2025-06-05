@@ -108,6 +108,14 @@ def generate_protocol(notes: Dict[str, Any], retriever: VectorStoreRetriever, ll
                         | format_docs,
              "notes": itemgetter("notes_formatted")}
             | prompt_template
+            | RunnableLambda(
+                lambda final_prompt: (
+                    print(f"--- Debug: Prompt Template Output (type: {type(final_prompt)}) ---"),
+                    print(final_prompt),
+                    print("--- End Debug: Prompt Template Output ---"),
+                    final_prompt
+                )[-1]  # Pass through after printing
+            )
             | llm
             | StrOutputParser()
         )
