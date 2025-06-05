@@ -337,8 +337,9 @@ with col2:
         st.subheader("Generated Draft (with Citations):")
         # Use markdown to allow for potential formatting from the LLM
         # Use a text area for better scrollability and copy-paste
-        st.text_area("Draft Output", value=st.session_state.protocol_draft, height=400, disabled=True)
-
+        #st.text_area("Draft Output", value=st.session_state.protocol_draft, height=400, disabled=True)
+        st.markdown(st.session_state.protocol_draft, unsafe_allow_html=True) # Use markdown for better formatting
+        st.divider()
         # Add download button for the final, cleaned protocol
         if st.session_state.final_protocol:
             st.download_button(
