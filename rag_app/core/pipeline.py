@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import List, Dict, Any
 from operator import itemgetter
@@ -101,7 +102,9 @@ def generate_protocol(notes: Dict[str, Any], retriever: VectorStoreRetriever, ll
         # Prepare the input dictionary for the chain
         chain_input = {
             "notes_query": notes_query,
-            "notes_formatted": format_notes_input(notes) # Pass formatted notes again for the prompt
+           # "notes_formatted": format_notes_input(notes) # Pass formatted notes again for the prompt
+            "notes_formatted": json.dumps(notes, ensure_ascii=False, indent=2)
+
         }
         result = rag_chain.invoke(chain_input)
         logger.info("Protocol generation completed successfully.")
