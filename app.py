@@ -222,10 +222,10 @@ with col1:
         st.subheader("Allgemeine Informationen")
         title = st.text_input("Titel:", value=st.session_state.meeting_notes["general_info"].get("title", ""))
         property_address = st.text_input("Objektadresse:", value=st.session_state.meeting_notes["general_info"].get("property_address", ""))
-        date = str(st.date_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", "")))
+        date = st.date_input("Datum:", value=st.session_state.meeting_notes["general_info"].get("date", "today"))
         location = st.text_input("Besprechungsort:", value=st.session_state.meeting_notes["general_info"].get("location", ""))
-        start_time = str(st.time_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", "")))
-        end_time = str(st.time_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", "")))
+        start_time = st.time_input("Beginn:", value=st.session_state.meeting_notes["general_info"].get("start_time", None))
+        end_time = st.time_input("Ende:", value=st.session_state.meeting_notes["general_info"].get("end_time", None))
         chairperson = st.text_input("Versammlungsleiter:", value=st.session_state.meeting_notes["general_info"].get("chairperson", ""))
         secretary = st.text_input("Protokollführer:", value=st.session_state.meeting_notes["general_info"].get("secretary", ""))
     
@@ -257,11 +257,11 @@ with col1:
         if submitted or add_point or remove_point:
             # Always update general info from the form fields
             st.session_state.meeting_notes["general_info"]["title"] = title
-            st.session_state.meeting_notes["general_info"]["date"] = date
+            st.session_state.meeting_notes["general_info"]["date"] = str(date) if date else None
             st.session_state.meeting_notes["general_info"]["property_address"] = property_address
             st.session_state.meeting_notes["general_info"]["location"] = location
-            st.session_state.meeting_notes["general_info"]["start_time"] = start_time
-            st.session_state.meeting_notes["general_info"]["end_time"] = end_time
+            st.session_state.meeting_notes["general_info"]["start_time"] = str(start_time) if start_time else None
+            st.session_state.meeting_notes["general_info"]["end_time"] = str(end_time) if end_time else None
             st.session_state.meeting_notes["general_info"]["chairperson"] = chairperson
             st.session_state.meeting_notes["general_info"]["secretary"] = secretary
 
