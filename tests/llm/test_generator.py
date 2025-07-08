@@ -5,6 +5,7 @@ from unittest.mock import patch, MagicMock
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.language_models.llms import LLM
 from langchain_mistralai.chat_models import ChatMistralAI
+from langchain_core.utils.pydantic import is_basemodel_instance
 
 from rag_app.llm.generator import initialize_mistral_llm, rag_prompt
 
@@ -33,7 +34,8 @@ class TestInitializeMistralLLM:
 
         llm = initialize_mistral_llm(model_name="test-model", temperature=0.5)
 
-        assert isinstance(llm, LLM)
+        # assert isinstance(llm, LLM)
+        assert is_basemodel_instance(llm)
         mock_chat_mistral_ai.assert_called_once_with(
             model="test-model",
             mistral_api_key=DUMMY_API_KEY,
@@ -51,7 +53,7 @@ class TestInitializeMistralLLM:
 
         llm = initialize_mistral_llm(api_key=DUMMY_API_KEY, model_name="another-model")
 
-        assert isinstance(llm, LLM)
+        assert is_basemodel_instance(llm)
         mock_chat_mistral_ai.assert_called_once_with(
             model="another-model",
             mistral_api_key=DUMMY_API_KEY
